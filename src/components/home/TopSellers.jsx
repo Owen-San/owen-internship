@@ -52,21 +52,21 @@ const TopSellers = () => {
             <ol className="author_list">
               {data.map((seller, index) => {
                 const isSkeleton = !seller;
-
-                const id = seller?.id;
+                const id = seller?.id ?? index;
                 const authorId = seller?.authorId;
-                const name = seller?.authorName;
+                const name = seller?.authorName || `Author #${index + 1}`;
                 const img = seller?.authorImage || AuthorImage;
                 const price = typeof seller?.price === "number" ? `${seller.price} ETH` : "—";
+                const authorHref = authorId ? `/author/${authorId}` : "/author";
 
                 return (
-                  <li key={id ?? index}>
+                  <li key={id}>
                     <div className="author_list_pp">
                       {isSkeleton ? (
                         <div className="skeleton" style={{ width: 50, height: 50, borderRadius: "50%" }} />
                       ) : (
-                        <Link to="/author" title={name} state={{ authorId }}>
-                          <img className="lazy pp-author" src={img} alt={name || "Author avatar"} />
+                        <Link to={authorHref} title={name} state={{ authorId }}>
+                          <img className="lazy pp-author" src={img} alt={name} />
                           <i className="fa fa-check"></i>
                         </Link>
                       )}
@@ -80,8 +80,8 @@ const TopSellers = () => {
                         </>
                       ) : (
                         <>
-                          <Link to="/author" state={{ authorId }}>
-                            {name || `Author #${index + 1}`}
+                          <Link to={authorHref} state={{ authorId }}>
+                            {name}
                           </Link>
                           <span>{price}</span>
                           {authorId ? <small className="author-id">ID: {authorId}</small> : null}
