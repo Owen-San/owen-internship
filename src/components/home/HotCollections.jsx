@@ -83,10 +83,22 @@ const HotCollections = () => {
             <div ref={sliderRef} className="keen-slider" style={{ width: "100%" }}>
               {data.map((it, i) => {
                 const isSkeleton = !it;
-                const title = (it && (it.name || it.title || it.collectionName)) || "Pinky Ocean";
-                const cover = (it && (it.image || it.cover || it.banner || it.nftImage)) || nftImage;
-                const avatar = (it && (it.authorImage || it.avatar || it.logo)) || AuthorImage;
-                const chain = (it && (it.chain || it.symbol || it.standard || it.network)) || "ERC-192";
+
+                const title =
+                  (it && (it.name || it.title || it.collectionName)) || "Pinky Ocean";
+                const cover =
+                  (it && (it.image || it.cover || it.banner || it.nftImage)) || nftImage;
+                const avatar =
+                  (it && (it.authorImage || it.avatar || it.logo)) || AuthorImage;
+                const chain =
+                  (it && (it.chain || it.symbol || it.standard || it.network)) || "ERC-192";
+
+                const authorSlugRaw =
+                  (it && (it.authorId ?? it.author_id ?? it.ownerId ?? it.author ?? it.id)) || null;
+                const authorSlug = authorSlugRaw
+                  ? String(authorSlugRaw).trim().replace(/\s+/g, "-").toLowerCase()
+                  : "unknown";
+
                 return (
                   <div className="keen-slider__slide" key={i} style={{ minWidth: 0 }}>
                     <div className="nft_coll">
@@ -105,16 +117,26 @@ const HotCollections = () => {
                           </Link>
                         )}
                       </div>
+
                       <div className="nft_coll_pp" style={{ marginTop: overlap }}>
                         {isSkeleton ? (
                           <div className="hc-skeleton hc-round" style={{ width: 60, height: 60, margin: "0 auto" }} />
                         ) : (
-                          <Link to="/author">
+                          <Link
+                            to={`/author/${authorSlug}`}
+                            state={{
+                              authorId: it?.authorId ?? it?.author_id ?? it?.ownerId ?? null,
+                              name: it?.author ?? it?.authorName ?? it?.creator ?? null,
+                              avatar,
+                              cover,
+                            }}
+                          >
                             <img className="lazy pp-coll" src={avatar} alt={title} />
                           </Link>
                         )}
                         {!isSkeleton && <i className="fa fa-check"></i>}
                       </div>
+
                       <div className="nft_coll_info">
                         {isSkeleton ? (
                           <>
