@@ -107,7 +107,7 @@ const NewItems = () => {
           <div ref={sliderRef} className="keen-slider" style={{ width: "100%" }}>
             {data.map((it, index) => {
               const isSkeleton = !it;
-              const creator = it?.author || it?.creator || it?.authorId || "Unknown";
+              const creator = it?.author || it?.creator || it?.authorName || "Unknown";
               const avatar = it?.authorImage || it?.avatar || AuthorImage;
               const preview = it?.nftImage || it?.image || nftImage;
               const title = it?.title || it?.name || "Pinky Ocean";
@@ -117,6 +117,12 @@ const NewItems = () => {
                 ? formatCountdown(it.expiryDate || it.endAt || it.deadline || it.ending || it.countdown)
                 : null;
 
+              const authorSlugRaw =
+                it?.authorId ?? it?.author_id ?? it?.ownerId ?? it?.creatorId ?? it?.author ?? it?.id;
+              const authorSlug = authorSlugRaw
+                ? String(authorSlugRaw).trim().replace(/\s+/g, "-").toLowerCase()
+                : "unknown";
+
               return (
                 <div className="keen-slider__slide" key={index}>
                   <div className="nft__item">
@@ -125,13 +131,20 @@ const NewItems = () => {
                         <div className="hc-skeleton hc-round" style={{ width: 50, height: 50 }} />
                       ) : (
                         <Link
-                          to="/author"
+                          to={`/author/${authorSlug}`}
+                          state={{
+                            authorId: it?.authorId ?? it?.author_id ?? it?.ownerId ?? null,
+                            name: creator,
+                            avatar,
+                            lastItem: it,
+                          }}
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
                           title={`Creator: ${creator}`}
+                          aria-label={`View ${creator}'s profile`}
                           onClick={(e) => handleNavigate(e, it)}
                         >
-                          <img className="lazy" src={avatar} alt="" />
+                          <img className="lazy" src={avatar} alt={creator} />
                           <i className="fa fa-check"></i>
                         </Link>
                       )}
@@ -166,7 +179,7 @@ const NewItems = () => {
                         <div className="hc-skeleton hc-radius" style={{ width: "100%", height: 260 }} />
                       ) : (
                         <Link to="/item-details" state={{ item: it }} onClick={(e) => handleNavigate(e, it)}>
-                          <img src={preview} className="lazy nft__item_preview" alt="" loading="lazy" />
+                          <img src={preview} className="lazy nft__item_preview" alt={title} loading="lazy" />
                         </Link>
                       )}
                     </div>
