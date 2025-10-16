@@ -113,15 +113,9 @@ const NewItems = () => {
               const title = it?.title || it?.name || "Pinky Ocean";
               const price = it?.price ? `${it.price} ETH` : "3.08 ETH";
               const likes = typeof it?.likes === "number" ? it.likes : 69;
-              const countdown = it
-                ? formatCountdown(it.expiryDate || it.endAt || it.deadline || it.ending || it.countdown)
-                : null;
-
-              const authorSlugRaw =
-                it?.authorId ?? it?.author_id ?? it?.ownerId ?? it?.creatorId ?? it?.author ?? it?.id;
-              const authorSlug = authorSlugRaw
-                ? String(authorSlugRaw).trim().replace(/\s+/g, "-").toLowerCase()
-                : "unknown";
+              const countdown = it ? formatCountdown(it.expiryDate || it.endAt || it.deadline || it.ending || it.countdown) : null;
+              const authorId = it?.authorId ?? it?.ownerId ?? null;
+              const nftId = it?.nftId ?? null;
 
               return (
                 <div className="keen-slider__slide" key={index}>
@@ -131,13 +125,8 @@ const NewItems = () => {
                         <div className="hc-skeleton hc-round" style={{ width: 50, height: 50 }} />
                       ) : (
                         <Link
-                          to={`/author/${authorSlug}`}
-                          state={{
-                            authorId: it?.authorId ?? it?.author_id ?? it?.ownerId ?? null,
-                            name: creator,
-                            avatar,
-                            lastItem: it,
-                          }}
+                          to={authorId ? `/author/${authorId}` : "/author"}
+                          state={{ authorId, name: creator, avatar, lastItem: it }}
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
                           title={`Creator: ${creator}`}
@@ -178,7 +167,7 @@ const NewItems = () => {
                       {isSkeleton ? (
                         <div className="hc-skeleton hc-radius" style={{ width: "100%", height: 260 }} />
                       ) : (
-                        <Link to="/item-details" state={{ item: it }} onClick={(e) => handleNavigate(e, it)}>
+                        <Link to={nftId ? `/item-details/${nftId}` : "/item-details"} onClick={(e) => handleNavigate(e, it)}>
                           <img src={preview} className="lazy nft__item_preview" alt={title} loading="lazy" />
                         </Link>
                       )}
@@ -193,7 +182,7 @@ const NewItems = () => {
                         </>
                       ) : (
                         <>
-                          <Link to="/item-details" state={{ item: it }} onClick={(e) => handleNavigate(e, it)}>
+                          <Link to={nftId ? `/item-details/${nftId}` : "/item-details"} onClick={(e) => handleNavigate(e, it)}>
                             <h4>{title}</h4>
                           </Link>
                           <div className="nft__item_price">{price}</div>
