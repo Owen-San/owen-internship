@@ -5,76 +5,73 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import AuthorImage from "../images/author_thumbnail.jpg";
 import nftImage from "../images/nftImage.jpg";
 
-const API_ITEMS = "https://us-central1-nft-cloud-functions.cloudfunctions.net/newItems";
-const API_AUTHOR = "https://us-central1-nft-cloud-functions.cloudfunctions.net/author";
+const DETAILS_API = "https://us-central1-nft-cloud-functions.cloudfunctions.net/itemDetails";
+const LIST_API = "https://us-central1-nft-cloud-functions.cloudfunctions.net/newItems";
 
 const ItemDetails = () => {
-  const { id } = useParams();
+  const { id: routeParam } = useParams();
   const { state } = useLocation();
-  const passedItem = state?.item;
+  const passedItem = state?.item || null;
 
-  const [item, setItem] = useState(passedItem || null);
-  const [author, setAuthor] = useState(null);
+  const [item, setItem] = useState(passedItem);
   const [loading, setLoading] = useState(!passedItem);
-  const [authorLoading, setAuthorLoading] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   useEffect(() => {
-    if (passedItem) return;
-    try {
-      const cached = sessionStorage.getItem("nft:selectedItem");
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (!id || String(parsed?.id ?? "") === String(id)) {
-          setItem(parsed);
-          setLoading(false);
-          return;
-        }
-      }
-    } catch {}
-    setLoading(true);
-    axios
-      .get(API_ITEMS)
-      .then((res) => {
-        const arr = Array.isArray(res.data) ? res.data : [];
-        const found =
-          arr.find((x) => String(x?.id ?? "") === String(id)) ??
-          (Number.isFinite(Number(id)) ? arr[Number(id)] : null) ??
-          null;
-        setItem(found);
-      })
-      .catch(() => setItem(null))
-      .finally(() => setLoading(false));
-  }, [id, passedItem]);
-
-  useEffect(() => {
-    if (!item?.authorId) {
-      setAuthor(null);
+    if (passedItem) {
+      setItem(passedItem);
+      setLoading(false);
       return;
     }
-    setAuthorLoading(true);
-    const tryFetch = async () => {
-      const urls = [
-        `${API_AUTHOR}?author=${encodeURIComponent(item.authorId)}`,
-        `${API_AUTHOR}?authorId=${encodeURIComponent(item.authorId)}`,
-        `${API_AUTHOR}?id=${encodeURIComponent(item.authorId)}`,
-      ];
-      for (const url of urls) {
-        try {
-          const { data } = await axios.get(url);
+    const fetchData = async () => {
+      setLoading(true);
+      const paramNum = Number(routeParam);
+      const tryDetailsFirst = Number.isFinite(paramNum) && paramNum > 0;
+      try {
+        if (tryDetailsFirst) {
+          const { data } = await axios.get(`${DETAILS_API}?nftId=${encodeURIComponent(paramNum)}`);
           if (data && typeof data === "object" && Object.keys(data).length) {
-            setAuthor(Array.isArray(data) ? data[0] : data);
+            setItem(data);
+            setLoading(false);
             return;
           }
-        } catch {}
+        }
+        const listRes = await axios.get(LIST_API);
+        const arr = Array.isArray(listRes.data) ? listRes.data : [];
+        let found = null;
+        if (Number.isFinite(paramNum)) {
+          found =
+            arr.find((x) => String(x?.nftId ?? "") === String(paramNum)) ||
+            arr.find((x) => String(x?.id ?? "") === String(paramNum)) ||
+            null;
+        }
+        if (!found && routeParam) {
+          found =
+            arr.find((x) => String(x?.title ?? "").toLowerCase().includes(String(routeParam).toLowerCase())) ||
+            null;
+        }
+        if (found?.nftId) {
+          try {
+            const { data } = await axios.get(`${DETAILS_API}?nftId=${encodeURIComponent(found.nftId)}`);
+            if (data && typeof data === "object" && Object.keys(data).length) {
+              setItem(data);
+              setLoading(false);
+              return;
+            }
+          } catch {}
+        }
+        setItem(found || null);
+      } catch {
+        setItem(null);
+      } finally {
+        setLoading(false);
       }
-      setAuthor(null);
     };
-    tryFetch().finally(() => setAuthorLoading(false));
-  }, [item?.authorId]);
+    fetchData();
+  }, [routeParam, passedItem]);
 
   if (loading) {
     return (
@@ -84,12 +81,115 @@ const ItemDetails = () => {
             <div className="container">
               <div className="row">
                 <div className="col-md-6 text-center">
-                  <div style={{ width: "100%", height: 420, borderRadius: 12, background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)", backgroundSize: "200% 100%", animation: "idShimmer 1.2s linear infinite" }} />
+                  <div
+                    style={{
+                      width: "100%",
+                      height: 420,
+                      borderRadius: 12,
+                      background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)",
+                      backgroundSize: "200% 100%",
+                      animation: "idShimmer 1.2s linear infinite",
+                      marginBottom: 24
+                    }}
+                  />
                 </div>
                 <div className="col-md-6">
-                  <div style={{ height: 28, width: "60%", marginBottom: 16, background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)", backgroundSize: "200% 100%", animation: "idShimmer 1.2s linear infinite", borderRadius: 6 }} />
-                  <div style={{ height: 16, width: 120, marginBottom: 24, background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)", backgroundSize: "200% 100%", animation: "idShimmer 1.2s linear infinite", borderRadius: 6 }} />
-                  <div style={{ height: 80, width: "100%", marginBottom: 24, background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)", backgroundSize: "200% 100%", animation: "idShimmer 1.2s linear infinite", borderRadius: 8 }} />
+                  <div
+                    style={{
+                      height: 32,
+                      width: "70%",
+                      borderRadius: 8,
+                      background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)",
+                      backgroundSize: "200% 100%",
+                      animation: "idShimmer 1.2s linear infinite",
+                      marginBottom: 16
+                    }}
+                  />
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 16,
+                      marginBottom: 16
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: 16,
+                        width: 80,
+                        borderRadius: 6,
+                        background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)",
+                        backgroundSize: "200% 100%",
+                        animation: "idShimmer 1.2s linear infinite"
+                      }}
+                    />
+                    <div
+                      style={{
+                        height: 16,
+                        width: 80,
+                        borderRadius: 6,
+                        background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)",
+                        backgroundSize: "200% 100%",
+                        animation: "idShimmer 1.2s linear infinite"
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      height: 80,
+                      width: "100%",
+                      borderRadius: 10,
+                      background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)",
+                      backgroundSize: "200% 100%",
+                      animation: "idShimmer 1.2s linear infinite",
+                      marginBottom: 24
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 40, alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "50%",
+                          background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)",
+                          backgroundSize: "200% 100%",
+                          animation: "idShimmer 1.2s linear infinite"
+                        }}
+                      />
+                      <div
+                        style={{
+                          width: 120,
+                          height: 16,
+                          borderRadius: 6,
+                          background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)",
+                          backgroundSize: "200% 100%",
+                          animation: "idShimmer 1.2s linear infinite"
+                        }}
+                      />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "50%",
+                          background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)",
+                          backgroundSize: "200% 100%",
+                          animation: "idShimmer 1.2s linear infinite"
+                        }}
+                      />
+                      <div
+                        style={{
+                          width: 120,
+                          height: 16,
+                          borderRadius: 6,
+                          background: "linear-gradient(90deg,#e9ecef 0%,#f8f9fa 40%,#e9ecef 80%)",
+                          backgroundSize: "200% 100%",
+                          animation: "idShimmer 1.2s linear infinite"
+                        }}
+                      />
+                    </div>
+                  </div>
                   <style>{`@keyframes idShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}`}</style>
                 </div>
               </div>
@@ -114,18 +214,18 @@ const ItemDetails = () => {
     );
   }
 
-  const preview = item.nftImage || nftImage;
   const title = item.title || "";
-  const price = item.price;
+  const description = item.description || "";
+  const views = typeof item.views === "number" ? item.views : null;
   const likes = typeof item.likes === "number" ? item.likes : null;
-
-  const authorName =
-    author?.authorName ||
-    author?.name ||
-    author?.author ||
-    author?.username ||
-    (item.authorId ? "" : "Unknown");
-  const authorImg = author?.authorImage || author?.image || item.authorImage || AuthorImage;
+  const price = item.price ?? "";
+  const ownerId = item.ownerId;
+  const ownerName = item.ownerName;
+  const ownerImg = item.ownerImage || AuthorImage;
+  const creatorId = item.creatorId;
+  const creatorName = item.creatorName;
+  const creatorImg = item.creatorImage || AuthorImage;
+  const image = item.nftImage || nftImage;
 
   return (
     <div id="wrapper">
@@ -135,73 +235,69 @@ const ItemDetails = () => {
           <div className="container">
             <div className="row">
               <div className="col-md-6 text-center">
-                <img
-                  src={preview}
-                  className="img-fluid img-rounded mb-sm-30 nft-image"
-                  alt={title}
-                />
+                <img src={image} className="img-fluid img-rounded mb-sm-30 nft-image" alt={title} />
               </div>
               <div className="col-md-6">
                 <div className="item_info">
-                  {title && <h2>{title}</h2>}
-
-                  {likes !== null && (
-                    <div className="item_info_counts">
+                  <h2>{title}</h2>
+                  <div className="item_info_counts">
+                    {views !== null && (
+                      <div className="item_info_views">
+                        <i className="fa fa-eye"></i>
+                        {views}
+                      </div>
+                    )}
+                    {likes !== null && (
                       <div className="item_info_like">
                         <i className="fa fa-heart"></i>
                         {likes}
                       </div>
-                    </div>
-                  )}
-
+                    )}
+                  </div>
+                  {description ? <p>{description}</p> : null}
                   <div className="d-flex flex-row">
                     <div className="mr40">
                       <h6>Owner</h6>
                       <div className="item_author">
                         <div className="author_list_pp">
-                          <Link to="/author">
-                            <img className="lazy" src={authorImg} alt={authorName || "Author"} />
+                          <Link to={ownerId ? `/author/${ownerId}` : "/author"}>
+                            <img className="lazy" src={ownerImg} alt={ownerName || ""} />
                             <i className="fa fa-check"></i>
                           </Link>
                         </div>
                         <div className="author_list_info">
-                          <Link to="/author">
-                            {authorLoading ? "Loading..." : (authorName || "Unknown")}
+                          <Link to={ownerId ? `/author/${ownerId}` : "/author"}>
+                            {ownerName || ""}
                           </Link>
                         </div>
                       </div>
                     </div>
                     <div></div>
                   </div>
-
                   <div className="de_tab tab_simple">
                     <div className="de_tab_content">
                       <h6>Creator</h6>
                       <div className="item_author">
                         <div className="author_list_pp">
-                          <Link to="/author">
-                            <img className="lazy" src={authorImg} alt={authorName || "Author"} />
+                          <Link to={creatorId ? `/author/${creatorId}` : "/author"}>
+                            <img className="lazy" src={creatorImg} alt={creatorName || ""} />
                             <i className="fa fa-check"></i>
                           </Link>
                         </div>
                         <div className="author_list_info">
-                          <Link to="/author">
-                            {authorLoading ? "Loading..." : (authorName || "Unknown")}
+                          <Link to={creatorId ? `/author/${creatorId}` : "/author"}>
+                            {creatorName || ""}
                           </Link>
                         </div>
                       </div>
                     </div>
-
                     <div className="spacer-40"></div>
-
                     <h6>Price</h6>
                     <div className="nft-item-price">
-                      <img src={EthImage} alt="ETH" />
+                      <img src={EthImage} alt="" />
                       <span>{price}</span>
                     </div>
                   </div>
-
-                  {item.expiryDate ? <div className="spacer-20"></div> : null}
                 </div>
               </div>
             </div>
