@@ -4,8 +4,10 @@ import { Link, useParams } from "react-router-dom";
 import AuthorBanner from "../images/author_banner.jpg";
 import AuthorItems from "../components/author/AuthorItems";
 import AuthorImage from "../images/author_thumbnail.jpg";
+import AOS from "aos";
 
-const ENDPOINT = "https://us-central1-nft-cloud-functions.cloudfunctions.net/authors";
+const ENDPOINT =
+  "https://us-central1-nft-cloud-functions.cloudfunctions.net/authors";
 
 const Author = () => {
   const { authorId } = useParams();
@@ -46,8 +48,13 @@ const Author = () => {
     };
   }, [authorId]);
 
+  useEffect(() => {
+    AOS.refresh();
+  }, [loading, author]);
+
   const displayName = author?.author || author?.authorName || "Unknown";
-  const rawTag = author?.tag ?? author?.username ?? author?.authorTag ?? "unknown";
+  const rawTag =
+    author?.tag ?? author?.username ?? author?.authorTag ?? "unknown";
   const username = rawTag.startsWith("@") ? rawTag : `@${rawTag}`;
   const avatar = author?.authorImage || AuthorImage;
   const banner = author?.authorBanner || AuthorBanner;
@@ -91,17 +98,22 @@ const Author = () => {
           className="text-light"
           data-bgimage="url(images/author_banner.jpg) top"
           style={{ background: `url(${banner}) top` }}
+          data-aos="fade-down"
+          data-aos-delay="0"
         ></section>
 
         <section aria-label="section">
           <div className="container">
-            <div className="row">
+            <div className="row" data-aos="fade-up" data-aos-delay="50">
               <div className="col-md-12">
                 <div className="d_profile de-flex">
                   <div className="de-flex-col">
                     <div className="profile_avatar">
                       {loading ? (
-                        <div className="skeleton" style={{ width: 90, height: 90, borderRadius: "50%" }} />
+                        <div
+                          className="skeleton"
+                          style={{ width: 90, height: 90, borderRadius: "50%" }}
+                        />
                       ) : (
                         <img src={avatar} alt={displayName} />
                       )}
@@ -109,9 +121,30 @@ const Author = () => {
                       <div className="profile_name">
                         {loading ? (
                           <h4>
-                            <div className="skeleton" style={{ width: 160, height: 20, marginBottom: 8 }} />
-                            <div className="skeleton" style={{ width: 120, height: 16, marginBottom: 8 }} />
-                            <div className="skeleton" style={{ width: 280, height: 14, display: "inline-block" }} />
+                            <div
+                              className="skeleton"
+                              style={{
+                                width: 160,
+                                height: 20,
+                                marginBottom: 8,
+                              }}
+                            />
+                            <div
+                              className="skeleton"
+                              style={{
+                                width: 120,
+                                height: 16,
+                                marginBottom: 8,
+                              }}
+                            />
+                            <div
+                              className="skeleton"
+                              style={{
+                                width: 280,
+                                height: 14,
+                                display: "inline-block",
+                              }}
+                            />
                           </h4>
                         ) : (
                           <h4>
@@ -120,7 +153,11 @@ const Author = () => {
                             <span id="wallet" className="profile_wallet">
                               {wallet}
                             </span>
-                            <button id="btn_copy" title="Copy Text" onClick={onCopy}>
+                            <button
+                              id="btn_copy"
+                              title="Copy Text"
+                              onClick={onCopy}
+                            >
                               Copy
                             </button>
                           </h4>
@@ -128,15 +165,42 @@ const Author = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="profile_follow de-flex">
+                  <div
+                    className="profile_follow de-flex"
+                    data-aos="zoom-in"
+                    data-aos-delay="100"
+                  >
                     <div className="de-flex-col">
                       <div className="profile_follower">
-                        {loading ? <span className="skeleton" style={{ width: 120, height: 16, display: "inline-block" }} /> : `${followersCount} followers`}
+                        {loading ? (
+                          <span
+                            className="skeleton"
+                            style={{
+                              width: 120,
+                              height: 16,
+                              display: "inline-block",
+                            }}
+                          />
+                        ) : (
+                          `${followersCount} followers`
+                        )}
                       </div>
                       {loading ? (
-                        <div className="skeleton" style={{ width: 120, height: 44, borderRadius: 24, marginTop: 8 }} />
+                        <div
+                          className="skeleton"
+                          style={{
+                            width: 120,
+                            height: 44,
+                            borderRadius: 24,
+                            marginTop: 8,
+                          }}
+                        />
                       ) : (
-                        <button className="btn-main" onClick={onToggleFollow} disabled={loading}>
+                        <button
+                          className="btn-main"
+                          onClick={onToggleFollow}
+                          disabled={loading}
+                        >
                           {isFollowing ? "Unfollow" : "Follow"}
                         </button>
                       )}
@@ -145,7 +209,11 @@ const Author = () => {
                 </div>
               </div>
 
-              <div className="col-md-12">
+              <div
+                className="col-md-12"
+                data-aos="fade-up"
+                data-aos-delay="150"
+              >
                 <div className="de_tab tab_simple">
                   <AuthorItems />
                 </div>
