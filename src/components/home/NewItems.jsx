@@ -6,6 +6,15 @@ import axios from "axios";
 import AuthorImage from "../../images/author_thumbnail.jpg";
 import nftImage from "../../images/nftImage.jpg";
 
+const PER_VIEW = 4;
+
+function ensureLoopable(list, minCount) {
+  if (!Array.isArray(list) || list.length === 0) return [];
+  const out = [...list];
+  while (out.length < minCount) out.push(...list);
+  return out.slice(0, Math.max(minCount, list.length));
+}
+
 const NewItems = () => {
   const [items, setItems] = useState([]);
   const [now, setNow] = useState(Date.now());
@@ -29,7 +38,7 @@ const NewItems = () => {
     loop: true,
     mode: "free-snap",
     rubberband: false,
-    slides: { perView: 4, spacing: 24 },
+    slides: { perView: PER_VIEW, spacing: 24 },
     breakpoints: {
       "(max-width: 1199.98px)": { slides: { perView: 3, spacing: 20 } },
       "(max-width: 978px)": { slides: { perView: 2, spacing: 18 } },
@@ -39,6 +48,7 @@ const NewItems = () => {
       s.on("dragStarted", () => (draggingRef.current = true));
       s.on("dragEnded", () => (draggingRef.current = false));
       s.on("animationEnded", () => (draggingRef.current = false));
+      requestAnimationFrame(() => s.update());
     },
   });
 
@@ -55,7 +65,8 @@ const NewItems = () => {
     return `${h}h ${m}m ${sec}s`;
   };
 
-  const data = loading ? new Array(4).fill(null) : items;
+  const minForLoop = PER_VIEW * 3;
+  const data = loading ? new Array(minForLoop).fill(null) : ensureLoopable(items, minForLoop);
 
   const handleNavigate = (e, it) => {
     if (draggingRef.current) {
@@ -76,11 +87,8 @@ const NewItems = () => {
         .hc-skeleton { background: linear-gradient(90deg, #e9ecef 0%, #f8f9fa 40%, #e9ecef 80%); background-size: 200% 100%; animation: hcShimmer 1.2s linear infinite; }
         .hc-radius { border-radius: 8px; }
         .hc-round { border-radius: 50%; }
-        .keen-slider { overflow: hidden; padding-left: 0 !important; margin-left: 0 !important; }
-        .keen-slider__slide { min-width: calc(25% - 24px) !important; box-sizing: border-box; }
-        @media (max-width: 1199.98px) { .keen-slider__slide { min-width: calc(33.333% - 20px) !important; } }
-        @media (max-width: 978px) { .keen-slider__slide { min-width: calc(50% - 18px) !important; } }
-        @media (max-width: 575.98px) { .keen-slider__slide { min-width: 100% !important; } }
+        .keen-slider { overflow: hidden; }
+        /* Let Keen size slides; do NOT override .keen-slider__slide width */
       `}</style>
 
       <div className="container">
