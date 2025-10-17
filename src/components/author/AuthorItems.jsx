@@ -79,7 +79,7 @@ export default function AuthorItems() {
                 </div>
               ))
             : items.map((it, index) => {
-                const id = it?.id ?? it?.nftId ?? `it-${index}`;
+                const nftId = it?.nftId ?? it?.id ?? index;
                 const title = it?.title || it?.name || `Item #${index + 1}`;
                 const price =
                   typeof it?.price === "number"
@@ -94,7 +94,7 @@ export default function AuthorItems() {
                 return (
                   <div
                     className="col-lg-3 col-md-6 col-sm-6 col-xs-12"
-                    key={id}
+                    key={String(nftId)}
                   >
                     <div className="nft__item">
                       <div className="author_list_pp">
@@ -130,7 +130,7 @@ export default function AuthorItems() {
                             </div>
                           </div>
                         </div>
-                        <Link to={`/item-details/${id}`}>
+                        <Link to={`/item-details/${nftId}`}>
                           <img
                             src={img}
                             className="lazy nft__item_preview"
@@ -140,7 +140,7 @@ export default function AuthorItems() {
                       </div>
 
                       <div className="nft__item_info">
-                        <Link to={`/item-details/${id}`}>
+                        <Link to={`/item-details/${nftId}`}>
                           <h4>{title}</h4>
                         </Link>
                         <div className="nft__item_price">{price}</div>
